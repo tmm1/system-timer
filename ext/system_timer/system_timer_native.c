@@ -1,9 +1,9 @@
 /*
  * SystemTimer native implementation relying on ITIMER_REAL
- * 
+ *
  * Copyright 2008 David Vollbracht & Philippe Hanrigou
  */
- 
+
 #include "ruby.h"
 #include "rubysig.h"
 #include <signal.h>
@@ -55,7 +55,7 @@ static VALUE install_first_timer_and_save_original_configuration(VALUE self, VAL
     }
     clear_pending_sigalrm_for_ruby_threads();
     log_debug("[install_first_timer] Successfully blocked SIG_ALRM at O.S. level\n");
-	
+
    /*
     * Save previous signal handler.
     */
@@ -67,15 +67,15 @@ static VALUE install_first_timer_and_save_original_configuration(VALUE self, VAL
         return Qnil;
     }
     log_debug("[install_first_timer] Successfully saved existing SIG_ALRM handler\n");
-    
-	 /*
-	  * Install Ruby Level SIG_ALRM handler
-	  */
+
+    /*
+     * Install Ruby Level SIG_ALRM handler
+     */
     install_ruby_sigalrm_handler(self);
 
     /*
-     * Save original real time interval timer and aet new real time interval timer.     
-     */	
+     * Save original real time interval timer and aet new real time interval timer.
+     */
     set_itimerval(&original_timer_interval, 0.0);
     set_itimerval_with_minimum_1s_interval(&timer_interval, seconds);
     if (0 != setitimer(ITIMER_REAL, &timer_interval, &original_timer_interval)) {
@@ -96,7 +96,7 @@ static VALUE install_first_timer_and_save_original_configuration(VALUE self, VAL
         log_error("[install_first_timer] Could not unblock SIG_ALRM, timeout will not work", DISPLAY_ERRNO);
         restore_original_timer_interval();
         restore_original_ruby_sigalrm_handler(self);
-        restore_original_sigalrm_mask_when_blocked();		
+        restore_original_sigalrm_mask_when_blocked();
     }
     log_debug("[install_first_timer] Successfully unblocked SIG_ALRM.\n");
 
@@ -121,10 +121,10 @@ static VALUE install_next_timer(VALUE self, VALUE seconds)
     }
     clear_pending_sigalrm_for_ruby_threads();
     log_debug("[install_next_timer] Successfully blocked SIG_ALRM at O.S. level\n");
-	
+
     /*
      * Set new real time interval timer.
-     */	
+     */
     set_itimerval_with_minimum_1s_interval(&timer_interval, seconds);
     if (0 != setitimer(ITIMER_REAL, &timer_interval, NULL)) {
         log_error("[install_next_timer] Could not install our own timer, timeout will not work", DISPLAY_ERRNO);
@@ -132,7 +132,7 @@ static VALUE install_next_timer(VALUE self, VALUE seconds)
         return Qnil;
     }
     if (debug_enabled) {
-      log_debug("[install_next_timer] Successfully installed timer (%ds + %dus)\n", 
+      log_debug("[install_next_timer] Successfully installed timer (%ds + %dus)\n",
                 timer_interval.it_value.tv_sec, timer_interval.it_value.tv_usec);
     }
 
@@ -163,7 +163,7 @@ static VALUE restore_original_configuration(VALUE self)
     * Install Ruby Level SIG_ALRM handler
     */
     restore_original_ruby_sigalrm_handler(self);
-	
+
     if (original_signal_handler.sa_handler == NULL) {
         log_error("[restore_original_configuration] Previous SIG_ALRM handler not initialized!", DO_NOT_DISPLAY_ERRNO);
     } else if (0 == sigaction(SIGALRM, &original_signal_handler, NULL)) {
@@ -172,9 +172,9 @@ static VALUE restore_original_configuration(VALUE self)
         log_error("[restore_original_configuration] Could not restore previous handler for SIG_ALRM", DISPLAY_ERRNO);
     }
     original_signal_handler.sa_handler = NULL;
-	
+
     restore_original_timer_interval();
-    restore_original_sigalrm_mask_when_blocked();	
+    restore_original_sigalrm_mask_when_blocked();
 }
 
 /*
@@ -199,7 +199,7 @@ static void restore_sigalrm_mask(sigset_t *previous_mask)
         log_debug("[restore_sigalrm_mask] Unblocked SIG_ALRM\n");
     } else {
         log_debug("[restore_sigalrm_mask] No Need to unblock SIG_ALRM\n");
-    }	
+    }
 }
 
 static void restore_original_sigalrm_mask_when_blocked() 
@@ -231,19 +231,19 @@ static VALUE enable_debug(VALUE self) {
 
 static VALUE disable_debug(VALUE self) {
     debug_enabled = 0;
-    return Qnil;	
+    return Qnil;
 }
 
-static void log_debug(char* message, ...) 
+static void log_debug(char* message, ...)
 {
     va_list argp;
-    
-	  if (0 != debug_enabled) {
-	      va_start(argp, message);
+
+    if (0 != debug_enabled) {
+      va_start(argp, message);
         vfprintf(stdout, message, argp);
         va_end(argp);
     }
-	  return;
+    return;
 }
 
 static void log_error(char* message, int display_errno)
@@ -277,7 +277,7 @@ static void set_itimerval_with_minimum_1s_interval(struct itimerval *value,
                                                    VALUE seconds) {
 
     double sanitized_second_interval;
-                                                     
+
     sanitized_second_interval = NUM2DBL(seconds) + MINIMUM_TIMER_INTERVAL_IN_SECONDS;
     if (sanitized_second_interval < MINIMUM_TIMER_INTERVAL_IN_SECONDS ) {
         sanitized_second_interval = MINIMUM_TIMER_INTERVAL_IN_SECONDS;
@@ -295,14 +295,14 @@ static void set_itimerval(struct itimerval *value, double seconds) {
     value->it_value.tv_usec = (long int) ((seconds - value->it_value.tv_sec) \
                                           * MICRO_SECONDS);
     if (debug_enabled) {
-      log_debug("[set_itimerval] Set to %ds + %dus\n", value->it_value.tv_sec, 
+      log_debug("[set_itimerval] Set to %ds + %dus\n", value->it_value.tv_sec,
                                                        value->it_value.tv_usec);
     }
     return;
 }
 
 
-void Init_system_timer_native() 
+void Init_system_timer_native()
 {
     init_sigalarm_mask();
     rb_cSystemTimer = rb_define_module("SystemTimer");
