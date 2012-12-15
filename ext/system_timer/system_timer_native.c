@@ -5,7 +5,6 @@
  */
  
 #include "ruby.h"
-#include "rubysig.h"
 #include <signal.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -16,6 +15,14 @@
 #define MINIMUM_TIMER_INTERVAL_IN_SECONDS 0.2
 
 static VALUE rb_cSystemTimer;
+
+#ifdef RUBY_VM
+static int rb_thread_critical; /* dummy */
+#define CHECK_INTS
+#else
+/* use rb_thread_critical on Ruby 1.8.x */
+#include "rubysig.h"
+#endif
 
 // Ignore most of this for Rubinius
 #ifndef RUBINIUS
@@ -34,8 +41,8 @@ static void restore_original_timer_interval();
 static void set_itimerval_with_minimum_1s_interval(struct itimerval *, VALUE);
 static void set_itimerval(struct itimerval *, double);
 static void restore_sigalrm_mask(sigset_t *previous_mask);
-static void log_debug(char*, ...);
-static void log_error(char*, int);
+static void log_debug(const char*, ...);
+static void log_error(const char*, int);
 
 
 static VALUE install_first_timer_and_save_original_configuration(VALUE self, VALUE seconds)
@@ -234,7 +241,7 @@ static VALUE disable_debug(VALUE self) {
     return Qnil;	
 }
 
-static void log_debug(char* message, ...) 
+static void log_debug(const char* message, ...)
 {
     va_list argp;
     
@@ -246,7 +253,7 @@ static void log_debug(char* message, ...)
 	  return;
 }
 
-static void log_error(char* message, int display_errno)
+static void log_error(const char* message, int display_errno)
 {
     fprintf(stderr, "%s: %s\n", message, display_errno ? strerror(errno) : "");
     return;
@@ -291,8 +298,8 @@ static void set_itimerval(struct itimerval *value, double seconds) {
     }
     value->it_interval.tv_usec = 0;
     value->it_interval.tv_sec = 0;
-    value->it_value.tv_sec = (long int) (seconds);
-    value->it_value.tv_usec = (long int) ((seconds - value->it_value.tv_sec) \
+    value->it_value.tv_sec = (time_t) (seconds);
+    value->it_value.tv_usec = (suseconds_t) ((seconds - value->it_value.tv_sec) \
                                           * MICRO_SECONDS);
     if (debug_enabled) {
       log_debug("[set_itimerval] Set to %ds + %dus\n", value->it_value.tv_sec, 
