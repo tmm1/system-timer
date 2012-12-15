@@ -2,7 +2,7 @@
 
 require 'timeout'
 
-module SystemTimer 
+module SystemTimer
  class << self
 
    def timeout_after(seconds)
@@ -12,8 +12,8 @@ module SystemTimer
    end
 
    # Backward compatibility with timeout.rb
-   alias timeout timeout_after 
-   
+   alias timeout timeout_after
+
  end
- 
+
 end
