@@ -2,16 +2,16 @@
 
 require 'rake'
 require 'rake/testtask'
-require 'rake/rdoctask'
-require 'rake/gempackagetask'
+require 'rdoc/task'
 require 'rake/clean'
 require 'rubygems'
+require 'rubygems/package_task'
 
 CLEAN.include '**/*.o'
 CLEAN.include '**/*.so'
 CLEAN.include '**/*.bundle'
+CLEAN.include '**/Makefile'
 CLOBBER.include '**/*.log'
-CLOBBER.include '**/Makefile'
 CLOBBER.include '**/extconf.h'
 CLOBBER.include 'pkk/*'
 
@@ -54,7 +54,7 @@ file 'ext/system_timer/libsystem_timer_native.so' => 'ext/system_timer/Makefile'
     pid = fork { exec "make" }
     Process.waitpid pid
   end
-  fail "Make failed (status #{m})" unless $?.exitstatus == 0
+  fail "Make failed (status #{$?.inspect})" unless $?.exitstatus == 0
 end
 
 specification = Gem::Specification.new do |s|
@@ -62,7 +62,7 @@ specification = Gem::Specification.new do |s|
   s.summary = "Set a Timeout based on signals, which are more reliable than Timeout. Timeout is based on green threads."
   s.version = SYSTEM_TIMER_VERSION
   s.authors = ["Philippe Hanrigou", "David Vollbracht"]
-  if ENV['PACKAGE_FOR_WIN32'] || PLATFORM['win32']
+  if ENV['PACKAGE_FOR_WIN32'] || (defined?(PLATFORM) && PLATFORM['win32'])
     s.platform = Gem::Platform.new "mswin32"
     s.files = FileList['lib/system_timer_stub.rb']
     s.autorequire = "system_timer_stub"
@@ -84,7 +84,7 @@ specification = Gem::Specification.new do |s|
 	s.rubyforge_project = "systemtimer"
 end
 
-Rake::GemPackageTask.new(specification) do |package|
+Gem::PackageTask.new(specification) do |package|
 	 package.need_zip = false
 	 package.need_tar = false
 end
