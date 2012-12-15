@@ -2,10 +2,10 @@
 
 require 'rake'
 require 'rake/testtask'
-require 'rake/rdoctask'
-require 'rake/gempackagetask'
+require 'rdoc/task'
 require 'rake/clean'
 require 'rubygems'
+require 'rubygems/package_task'
 
 CLEAN.include '**/*.o'
 CLEAN.include '**/*.so'
@@ -84,7 +84,7 @@ specification = Gem::Specification.new do |s|
 	s.rubyforge_project = "systemtimer"
 end
 
-Rake::GemPackageTask.new(specification) do |package|
+Gem::PackageTask.new(specification) do |package|
 	 package.need_zip = false
 	 package.need_tar = false
 end
