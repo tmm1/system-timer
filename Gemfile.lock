@@ -1,0 +1,20 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    dust (0.1.6)
+    json (1.7.5)
+    metaclass (0.0.1)
+    mocha (0.13.1)
+      metaclass (~> 0.0.1)
+    rake (10.0.2)
+    rdoc (3.12)
+      json (~> 1.4)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  dust
+  mocha
+  rake
+  rdoc
